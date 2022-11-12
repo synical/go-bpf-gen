@@ -19,7 +19,7 @@ var (
 
 // FindOffsets finds all the offsets within a given function
 // where RET instructions are found
-func FindOffsets(r io.ReaderAt, symbolName string) ([]int, error) {
+func FindOffsets(r io.ReaderAt, symbolName string) ([]uint64, error) {
 	file, err := elf.NewFile(r)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func FindOffsets(r io.ReaderAt, symbolName string) ([]int, error) {
 	end := start + symbol.Size
 
 	function := text[start:end]
-	returns := []int{}
+	var returns []uint64
 
 	for i := 0; i < len(function); {
 		inst, err := x86asm.Decode(function[i:], 64)
@@ -61,7 +61,7 @@ func FindOffsets(r io.ReaderAt, symbolName string) ([]int, error) {
 			return nil, err
 		}
 		if inst.Op == x86asm.RET {
-			returns = append(returns, i)
+			returns = append(returns, symbol.Value+uint64(i))
 		}
 		i += inst.Len
 	}
